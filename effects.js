@@ -98,16 +98,16 @@ function submitContact(e) {
     };
     var FACE_KEYS = ['front', 'back', 'right', 'left', 'top', 'bottom'];
 
-    function makeCube(z, size, speed) {
+    function makeCube(z, size, speed, rgb) {
       var h = size / 2;
       var verts = [
         { x: -h, y: -h, z: -h }, { x: h, y: -h, z: -h }, { x: h, y: h, z: -h }, { x: -h, y: h, z: -h },
         { x: -h, y: -h, z: h }, { x: h, y: -h, z: h }, { x: h, y: h, z: h }, { x: -h, y: h, z: h }
       ];
       return {
-        z: z, size: size,
+        z: z, size: size, rgb: rgb,
         rx: Math.random() * Math.PI, ry: Math.random() * Math.PI, rz: Math.random() * 0.4,
-        spin: speed,
+        spin: speed, glowPhase: Math.random() * Math.PI * 2,
         driftX: (Math.random() - 0.5) * 480,
         driftY: (Math.random() - 0.5) * 200 - 30,
         verts: verts,
@@ -119,16 +119,17 @@ function submitContact(e) {
       };
     }
     var cubes = [
-      makeCube(1400, 92, 0.006),
-      makeCube(2300, 118, -0.0045),
-      makeCube(3100, 76, 0.008)
+      makeCube(1400, 92, 0.006, '136,146,248'),
+      makeCube(2300, 118, -0.0045, '124,214,255'),
+      makeCube(3100, 76, 0.008, '199,150,255')
     ];
 
     var raf = null;
 
-    function frame() {
+    function frame(ts) {
       if (docHidden) { raf = requestAnimationFrame(frame); return; }
       ctx.clearRect(0, 0, W, H);
+      ctx.shadowBlur = 0;
 
       var camYaw = mouse.nx * 0.08;
       var camPitch = mouse.ny * 0.04;
@@ -160,6 +161,7 @@ function submitContact(e) {
         if (!ok) continue;
 
         var depthFade = Math.max(0.1, Math.min(1, 1 - cube.z / 3300));
+        var pulse = 0.7 + 0.3 * Math.sin((ts || 0) * 0.0012 + cube.glowPhase);
 
         /* build visible faces with simple directional lighting, then paint back-to-front */
         var drawList = [];
@@ -176,21 +178,43 @@ function submitContact(e) {
         }
         drawList.sort(function (a, b) { return b.avgZ - a.avgZ; }); // paint far faces first
 
+        var brightest = null;
         for (var d = 0; d < drawList.length; d++) {
           var face = drawList[d];
-          var fillA = (0.05 + face.brightness * 0.14) * depthFade;
-          var edgeA = (0.20 + face.brightness * 0.34) * depthFade;
+          var fillA = (0.06 + face.brightness * 0.16) * depthFade;
+          var edgeA = (0.22 + face.brightness * 0.4) * depthFade * pulse;
           ctx.beginPath();
           for (var q = 0; q < face.idx.length; q++) {
             var pt = proj[face.idx[q]];
             if (q === 0) ctx.moveTo(pt.x, pt.y); else ctx.lineTo(pt.x, pt.y);
           }
           ctx.closePath();
-          ctx.fillStyle = 'rgba(136,146,248,' + fillA.toFixed(3) + ')';
+          ctx.fillStyle = 'rgba(' + cube.rgb + ',' + fillA.toFixed(3) + ')';
           ctx.fill();
-          ctx.strokeStyle = 'rgba(205,210,255,' + edgeA.toFixed(3) + ')';
-          ctx.lineWidth = 1;
+          ctx.shadowColor = 'rgba(' + cube.rgb + ',' + (0.5 * face.brightness * depthFade * pulse).toFixed(3) + ')';
+          ctx.shadowBlur = 10 * face.brightness * pulse;
+          ctx.strokeStyle = 'rgba(255,255,255,' + edgeA.toFixed(3) + ')';
+          ctx.lineWidth = 1.1;
           ctx.stroke();
+          ctx.shadowBlur = 0;
+          if (!brightest || face.brightness > brightest.brightness) brightest = face;
+        }
+
+        /* a soft specular glint on the face facing the camera most directly */
+        if (brightest && brightest.brightness > 0.5) {
+          var gp = proj[brightest.idx[0]];
+          var gc = proj[brightest.idx[2]];
+          var hx = gp.x * 0.65 + gc.x * 0.35;
+          var hy = gp.y * 0.65 + gc.y * 0.35;
+          var glintR = Math.max(10, cube.size * 0.4 * (gp.s || 1));
+          var glintA = 0.4 * (brightest.brightness - 0.5) * 2 * depthFade * pulse;
+          var grad = ctx.createRadialGradient(hx, hy, 0, hx, hy, glintR);
+          grad.addColorStop(0, 'rgba(255,255,255,' + glintA.toFixed(3) + ')');
+          grad.addColorStop(1, 'rgba(255,255,255,0)');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(hx, hy, glintR, 0, Math.PI * 2);
+          ctx.fill();
         }
       }
 
@@ -272,9 +296,9 @@ function submitContact(e) {
 
     var script = [
       { text: '$ ./connect --server mkwii-channel', cls: 'term-prompt' },
-      { text: '\u2713 discord invite dbgJQSeGhA \u2014 connected', cls: 'term-ok' },
+      { text: '\u2713 ctgp-r system: true', cls: 'term-ok' },
       { text: '\u2713 ctgp-r custom tracks loaded: 800+', cls: 'term-ok' },
-      { text: '$ status: ready to race_', cls: 'term-prompt' }
+      { text: '$ status: live_', cls: 'term-prompt' }
     ];
 
     function wait(ms) { return new Promise(function (res) { setTimeout(res, ms); }); }

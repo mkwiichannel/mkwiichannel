@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MKWii Channel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #070710; --surface: rgba(255,255,255,0.04);
+  --border: rgba(255,255,255,0.07); --muted: rgba(255,255,255,0.42);
+  --accent: #5865F2;
+  --mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  --panel: #0b0c13;
+  --code-green: #7ec788;
+  --online: #3fb950;
+}
+html,body { background:var(--bg); color:rgba(255,255,255,0.88); font-family:'Inter',sans-serif; min-height:100vh; overflow-x:hidden; }
+body::before {
+  content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background: radial-gradient(ellipse 60% 50% at 20% 20%,rgba(88,101,242,.12) 0%,transparent 60%),
+              radial-gradient(ellipse 50% 40% at 80% 80%,rgba(88,101,242,.08) 0%,transparent 55%);
+}
+.wrap { position:relative; z-index:1; max-width:1020px; margin:0 auto; padding:100px 32px 120px; }
+
+/* HERO */
+.hero { text-align:center; margin-bottom:72px; animation:fadeUp .6s ease both; }
+.hero h1 { font-family:'Rajdhani',sans-serif; font-size:clamp(38px,6vw,58px); font-weight:700; letter-spacing:1px; line-height:1.05; margin-bottom:18px; color:#fff; }
+.hero h1 span { background:linear-gradient(120deg,#8892f8,#5865F2 50%,#a0a8fc); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.hero p { font-size:15.5px; color:var(--muted); max-width:480px; margin:0 auto 36px; line-height:1.75; }
+.hero-cta {
+  display:inline-flex; align-items:center; gap:8px;
+  background:linear-gradient(135deg,#6472f5,#5865F2 50%,#4a56e0);
+  color:#fff; font-family:'Rajdhani',sans-serif; font-weight:700; font-size:14.5px; letter-spacing:.5px;
+  padding:13px 28px; border-radius:11px; text-decoration:none;
+  box-shadow:0 4px 16px rgba(88,101,242,.5),0 8px 32px rgba(88,101,242,.25);
+  transition:transform .2s cubic-bezier(.22,1,.36,1),box-shadow .2s; position:relative; overflow:hidden;
+}
+.hero-cta:hover { transform:translateY(-3px); box-shadow:0 10px 28px rgba(88,101,242,.7),0 18px 48px rgba(88,101,242,.3); }
+
+.section-label { font-family:var(--mono); font-size:12px; font-weight:500; letter-spacing:.4px; text-transform:none; color:var(--code-green); opacity:.75; text-align:center; margin-bottom:32px; }
+
+/* LIVE PREVIEW (desktop + mobile screenshot composite) */
+.preview-stage { position:relative; width:547px; height:320px; margin:0 auto 88px auto; overflow:visible; animation:fadeUp .6s .15s ease both; }
+.preview-desktop { position:absolute; top:-250px; left:-229px; width:820px; height:auto; z-index:1; }
+.preview-mobile { position:absolute; top:-1px; left:306px; width:340px; height:auto; z-index:2; }
+.preview-desktop-crop, .preview-mobile-crop { display:none; }
+
+/* DEVICES */
+.devices {
+  display:flex; gap:52px; align-items:flex-end; justify-content:center;
+  margin-bottom:88px; flex-wrap:wrap;
+  animation:fadeUp .6s .15s ease both;
+}
+
+/* LAPTOP */
+.laptop-wrap { display:flex; flex-direction:column; align-items:center; width:580px; max-width:100%; perspective:800px; }
+.laptop-lid {
+  width:100%;
+  background:linear-gradient(180deg,#202022 0%,#191919 60%,#141414 100%);
+  border-radius:14px 14px 0 0;
+  border:1.5px solid rgba(255,255,255,0.09); border-bottom:none;
+  padding:10px 10px 0;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),inset 0 -1px 0 rgba(0,0,0,.4);
+  position:relative;
+}
+.laptop-lid::after {
+  content:""; position:absolute; inset:0; border-radius:14px 14px 0 0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none; z-index:2;
+}
+.laptop-bezel { background:#0b0b0d; border-radius:6px 6px 0 0; padding:10px 10px 0; }
+.laptop-cam-row { display:flex; justify-content:center; margin-bottom:7px; }
+.laptop-cam { width:7px; height:7px; border-radius:50%; background:radial-gradient(circle at 40% 35%,#222228,#111114); border:1px solid #2a2a30; box-shadow:0 0 4px rgba(60,80,255,.12); }
+.laptop-screen { border-radius:4px 4px 0 0; overflow:hidden; aspect-ratio:16/10; background:#050508; position:relative; }
+.laptop-screen img { width:100%; height:100%; object-fit:cover; object-position:center center; transform:scale(0.88); transform-origin:center center; display:block; }
+.laptop-hinge { width:100%; height:7px; background:linear-gradient(180deg,#121214 0%,#1c1c1e 45%,#121214 100%); border-left:1.5px solid rgba(255,255,255,.06); border-right:1.5px solid rgba(255,255,255,.06); }
+.laptop-bottom { width:100%; background:linear-gradient(175deg,#1e1e20 0%,#171719 100%); border:1.5px solid rgba(255,255,255,.08); border-top:none; border-radius:0 0 12px 12px; padding:14px 24px 10px; }
+.laptop-pad { width:120px; height:24px; background:linear-gradient(180deg,#1b1b1e,#181818); border:1px solid rgba(255,255,255,.07); border-radius:6px; margin:0 auto; }
+.laptop-feet { display:flex; justify-content:space-between; padding:8px 6px 0; }
+.foot { width:32px; height:5px; background:#0d0d0f; border-radius:0 0 4px 4px; border:1px solid rgba(0,0,0,.6); border-top:none; }
+
+/* iPHONE */
+.phone-wrap { width:176px; flex-shrink:0; }
+.iphone {
+  position:relative; width:210px; height:430px; border-radius:52px;
+  background:linear-gradient(160deg,#3a3834 0%,#2e2c2a 25%,#262422 55%,#2c2a28 75%,#3a3836 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.22),inset 0 -1px 0 rgba(0,0,0,.55),inset 1px 0 0 rgba(255,255,255,.10),inset -1px 0 0 rgba(0,0,0,.30),0 0 0 1px rgba(0,0,0,.7),0 28px 60px rgba(0,0,0,.85),0 8px 20px rgba(0,0,0,.6);
+  background-image:repeating-linear-gradient(90deg,transparent,transparent 2px,rgba(255,255,255,.012) 2px,rgba(255,255,255,.012) 3px),linear-gradient(160deg,#3a3834 0%,#2e2c2a 25%,#262422 55%,#2c2a28 75%,#3a3836 100%);
+}
+.iphone::before { content:""; position:absolute; inset:0; border-radius:52px; background:linear-gradient(135deg,rgba(255,255,255,.14) 0%,rgba(255,255,255,.04) 20%,transparent 50%,rgba(255,255,255,.05) 80%,rgba(255,255,255,.10) 100%); pointer-events:none; z-index:8; }
+.iphone-cam-bump { position:absolute; top:16px; left:14px; width:52px; height:52px; border-radius:16px; background:linear-gradient(135deg,#1e1c1a,#2a2826); border:1px solid rgba(255,255,255,.07); box-shadow:0 2px 8px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.08); z-index:3; display:flex; flex-wrap:wrap; gap:4px; padding:8px; align-items:center; justify-content:center; }
+.cam-lens { width:16px; height:16px; border-radius:50%; background:radial-gradient(circle at 35% 32%,#2a2a32,#0d0d12); border:1.5px solid rgba(255,255,255,.12); box-shadow:0 0 4px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.06); }
+.cam-flash { width:8px; height:8px; border-radius:50%; background:radial-gradient(circle at 40% 40%,#fffbe0,#e0c060); border:1px solid rgba(255,255,255,.2); }
+.iphone-screen { position:absolute; top:6px; left:6px; right:6px; bottom:6px; border-radius:46px; background:#000; overflow:hidden; z-index:4; }
+.iphone-screen img { width:100%; height:100%; object-fit:cover; object-position:top center; display:block; }
+.di { position:absolute; top:12px; left:50%; transform:translateX(-50%); width:66px; height:24px; background:#000; border-radius:20px; z-index:10; display:flex; align-items:center; justify-content:center; gap:8px; }
+.di-cam { width:10px; height:10px; border-radius:50%; background:radial-gradient(circle at 35% 35%,#0d0d14,#060608); border:1.5px solid rgba(255,255,255,.08); position:relative; }
+.di-cam::after { content:""; position:absolute; top:2px; left:2px; width:3px; height:3px; border-radius:50%; background:rgba(80,100,255,.18); }
+.di-sensor { width:6px; height:6px; border-radius:50%; background:radial-gradient(circle,#181818,#0a0a0a); border:1px solid rgba(255,255,255,.06); }
+.iphone-statusbar { position:absolute; top:0; left:0; right:0; height:48px; z-index:9; display:flex; align-items:flex-end; justify-content:space-between; padding:0 22px 8px; background:linear-gradient(180deg,rgba(0,0,0,.5) 0%,transparent 100%); }
+.sb-bfill { height:100%; width:70%; background:#32d74b; border-radius:1px; }
+.btn-action,.btn-vol-up,.btn-vol-down { position:absolute; left:-3px; width:3.5px; border-radius:2px 0 0 2px; background:linear-gradient(90deg,#2e2c2a,#3a3836); border:1px solid rgba(255,255,255,.10); border-right:none; box-shadow:-1px 0 3px rgba(0,0,0,.5); z-index:5; }
+.btn-action { top:72px; height:26px; }
+.btn-vol-up { top:108px; height:32px; }
+.btn-vol-down { top:148px; height:32px; }
+.btn-power { position:absolute; right:-3px; top:116px; width:3.5px; height:44px; border-radius:0 2px 2px 0; background:linear-gradient(270deg,#2e2c2a,#3a3836); border:1px solid rgba(255,255,255,.10); border-left:none; box-shadow:1px 0 3px rgba(0,0,0,.5); z-index:5; }
+.iphone-safari { position:absolute; bottom:0; left:0; right:0; z-index:9; background:rgba(18,18,22,0.95); backdrop-filter:blur(20px); border-top:1px solid rgba(255,255,255,.07); padding:8px 10px 20px; }
+.safari-row { display:flex; align-items:center; gap:6px; }
+.safari-btn-icon { flex-shrink:0; opacity:.55; }
+.safari-url-bar { flex:1; background:rgba(255,255,255,.09); border:1px solid rgba(255,255,255,.08); border-radius:9px; height:30px; display:flex; align-items:center; justify-content:center; gap:5px; }
+.safari-url-text { font-size:9px; font-family:'Inter',sans-serif; color:rgba(255,255,255,.6); }
+.iphone-home { position:absolute; bottom:7px; left:50%; transform:translateX(-50%); width:108px; height:4px; background:rgba(255,255,255,.30); border-radius:100px; z-index:9; }
+
+/* FEATURES */
+.features { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; margin-bottom:72px; animation:fadeUp .6s .25s ease both; }
+.feature { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:26px 24px; transition:border-color .2s,background .2s; }
+.feature:hover { border-color:rgba(88,101,242,.25); background:rgba(88,101,242,.04); }
+.feature-icon { width:38px;height:38px;border-radius:10px;background:rgba(88,101,242,.12);border:1px solid rgba(88,101,242,.18);display:flex;align-items:center;justify-content:center;margin-bottom:16px; }
+.feature-icon svg{width:18px;height:18px}
+.feature h3{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;letter-spacing:.3px;margin-bottom:7px;color:#fff}
+.feature p{font-size:13px;color:var(--muted);line-height:1.65}
+
+/* BOTTOM CTA */
+.bottom-cta{text-align:center;padding:48px 32px;background:var(--surface);border:1px solid var(--border);border-radius:20px;animation:fadeUp .6s .45s ease both}
+.bottom-cta h2{font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;margin-bottom:10px;color:#fff;letter-spacing:.4px}
+.bottom-cta p{font-size:14px;color:var(--muted);margin-bottom:28px}
+.cta-buttons{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.cta-btn{display:inline-flex;align-items:center;gap:8px;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14.5px;letter-spacing:.5px;padding:13px 26px;border-radius:11px;text-decoration:none;color:#fff;border:1px solid transparent;transition:transform .2s cubic-bezier(.22,1,.36,1),box-shadow .2s,background .2s;position:relative;overflow:hidden;}
+.cta-btn:hover{transform:translateY(-3px)}
+.cta-btn.primary{background:linear-gradient(135deg,#6472f5,#5865F2 50%,#4a56e0);box-shadow:0 4px 16px rgba(88,101,242,.5)}
+.cta-btn.primary:hover{box-shadow:0 10px 28px rgba(88,101,242,.7)}
+.cta-btn.secondary{background:rgba(255,255,255,.055);border-color:rgba(255,255,255,.12)}
+.cta-btn.secondary:hover{background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.22)}
+
+/* CONTACT */
+.contact-block { margin-top:40px; text-align:center; padding:48px 32px; background:var(--surface); border:1px solid var(--border); border-radius:20px; animation:fadeUp .6s .5s ease both; }
+.contact-block h2 { font-family:'Rajdhani',sans-serif; font-size:28px; font-weight:700; margin-bottom:10px; color:#fff; letter-spacing:.4px; }
+.contact-block p { font-size:14px; color:var(--muted); margin-bottom:28px; }
+.contact-links-row { display:flex; justify-content:center; gap:16px; flex-wrap:wrap; margin-bottom:36px; }
+.contact-pill { display:inline-flex; align-items:center; gap:7px; font-family:'Rajdhani',sans-serif; font-weight:600; font-size:13.5px; letter-spacing:.4px; padding:10px 18px; border-radius:11px; text-decoration:none; color:rgba(255,255,255,.7); background:rgba(255,255,255,.055); border:1px solid rgba(255,255,255,.12); transition:background .2s,border-color .2s; }
+.contact-pill:hover { background:rgba(255,255,255,.10); border-color:rgba(255,255,255,.22); }
+.contact-form { max-width:480px; margin:0 auto; display:flex; flex-direction:column; gap:12px; text-align:left; }
+.cf-input, .cf-textarea {
+  background:rgba(255,255,255,0.05); border:1px solid var(--border);
+  border-radius:11px; padding:13px 16px;
+  font-family:'Inter',sans-serif; font-size:13.5px; color:rgba(255,255,255,.88);
+  outline:none; transition:border-color .2s; width:100%;
+}
+.cf-input:focus, .cf-textarea:focus { border-color:rgba(88,101,242,.5); }
+.cf-input::placeholder, .cf-textarea::placeholder { color:rgba(255,255,255,.2); }
+.cf-textarea { resize:vertical; min-height:110px; }
+
+/* NAV */
+.topnav{position:fixed;top:0;left:0;width:100%;z-index:9998;padding:14px 32px;display:flex;align-items:center;border-bottom:1px solid rgba(255,255,255,.07);background:rgba(7,7,16,.88);backdrop-filter:blur(16px)}
+.topnav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo-box{width:40px;height:40px;border-radius:11px;overflow:hidden;background:#000;border:1px solid rgba(255,255,255,.14)}
+.nav-logo-box img{width:100%;height:100%;object-fit:cover;display:block}
+.nav-logo-name{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;letter-spacing:.5px;color:rgba(255,255,255,.80)}
+.nav-status{margin-left:auto;display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11.5px;color:rgba(255,255,255,.4);letter-spacing:.3px}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--online);flex-shrink:0;animation:statusPulse 2.4s ease-in-out infinite}
+@keyframes statusPulse{0%{box-shadow:0 0 0 0 rgba(63,185,80,.55)}70%{box-shadow:0 0 0 7px rgba(63,185,80,0)}100%{box-shadow:0 0 0 0 rgba(63,185,80,0)}}
+
+/* TERMINAL WINDOW */
+.terminal-window{
+  max-width:560px; margin:0 auto 72px; border-radius:12px; overflow:hidden;
+  background:var(--panel); border:1px solid var(--border);
+  box-shadow:0 24px 60px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.04);
+  animation:fadeUp .6s .1s ease both; will-change:transform; transform-style:preserve-3d;
+}
+.terminal-titlebar{display:flex;align-items:center;gap:7px;padding:11px 14px;background:rgba(255,255,255,.025);border-bottom:1px solid var(--border)}
+.term-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.term-dot--red{background:#ff5f57}
+.term-dot--yellow{background:#febc2e}
+.term-dot--green{background:#28c840}
+.terminal-title{margin-left:6px;font-family:var(--mono);font-size:11.5px;color:rgba(255,255,255,.32);letter-spacing:.2px}
+.terminal-body{padding:22px 24px 26px;font-family:var(--mono);font-size:13px;line-height:2;text-align:left}
+.terminal-line{white-space:pre-wrap;word-break:break-word;min-height:1.6em;color:rgba(255,255,255,.7)}
+.terminal-line.term-prompt{color:#a3acfa}
+.terminal-line.term-ok{color:var(--online)}
+.term-cursor{display:inline-block;color:#a3acfa;animation:blink 1s step-end infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* FOOTER */
+.footer{position:fixed;bottom:0;left:0;width:100%;z-index:9999;background:rgba(0,0,0,.75);backdrop-filter:blur(18px);border-top:1px solid rgba(255,255,255,.045);display:flex;align-items:center;padding:0 18px;height:48px}
+.footer-left{display:flex;align-items:center;gap:10px;font-family:'Rajdhani',sans-serif;font-size:12.5px;font-weight:500;color:rgba(255,255,255,.32)}
+.footer-left img{width:30px;height:30px;border-radius:10px;opacity:.95}
+.footer-dot{color:rgba(255,255,255,.18)}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes ripple{to{transform:scale(2.6);opacity:0}}
+@media(max-width:700px){.wrap{padding:52px 20px 80px}.laptop-wrap{width:100%}.features{grid-template-columns:1fr 1fr}
+  .preview-stage{position:static;width:calc(100% + 40px);margin:0 -20px 36px;height:auto;display:flex;flex-direction:column;align-items:center;gap:18px;}
+  .preview-desktop,.preview-mobile{display:none;}
+  .preview-desktop-crop,.preview-mobile-crop{display:block;position:static;width:100%;height:auto;}
+  .preview-desktop-crop{max-width:520px;}
+  .preview-mobile-crop{max-width:300px;}
+}
+@media(max-width:420px){.features{grid-template-columns:1fr}}
+.hero {
+    position: relative;
+    z-index: 999999;
+}
+
+/* ===== 3D / MOTION LAYER (state set every frame by JS, not CSS transitions) ===== */
+#warpCanvas { position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.85; mix-blend-mode:screen; }
+#cursorGlow {
+  position:fixed; top:0; left:0; width:520px; height:520px; border-radius:50%; z-index:0;
+  background:radial-gradient(circle,rgba(88,101,242,.16) 0%,rgba(88,101,242,.05) 45%,transparent 72%);
+  transform:translate(-50%,-50%); pointer-events:none; mix-blend-mode:screen;
+  opacity:0; transition:opacity .4s ease; will-change:transform;
+}
+
+.preview-stage { perspective:1400px; }
+.preview-desktop, .preview-mobile {
+  will-change:transform; transform-style:preserve-3d;
+  filter:drop-shadow(0 30px 60px rgba(0,0,0,.55));
+  /* base transform is written every animation frame by JS (motion.js), not by CSS */
+}
+
+.feature {
+  transform-style:preserve-3d; will-change:transform;
+  transition:border-color .2s,background .2s; /* transform itself is JS-driven per frame */
+}
+.feature-icon { will-change:transform; }
+
+.hero-cta, .cta-btn { transform-style:preserve-3d; will-change:transform; }
+
+@media (prefers-reduced-motion: reduce) {
+  #warpCanvas, #cursorGlow { display:none !important; }
+  .preview-desktop, .preview-mobile, .feature, .feature-icon, .hero-cta, .cta-btn, .terminal-window { transform:none !important; }
+  .status-dot, .term-cursor { animation:none !important; }
+}
+@media (max-width:700px), (pointer:coarse) {
+
+  #cursorGlow { display:none; }
+}
+</style>
+</head>
+<body>
+<canvas id="warpCanvas"></canvas>
+<div id="cursorGlow"></div>
+<nav class="topnav">
+<div class="topnav-logo">
+<div class="nav-logo-box"><img src="ui_1.png" alt="MKWii Channel" /></div>
+<span class="nav-logo-name">MKWii Channel</span></div>
+<div class="nav-status"><span class="status-dot"></span>online</div>
+</nav>
+<div class="wrap">
+<div class="hero">
+<h1>Your home for<br /><span>Mario Kart Wii</span></h1>
+<p>A competitive and casual community built around races, tournaments, custom tracks and the best people in the game.</p>
+<a class="hero-cta" href="https://discord.gg/dbgJQSeGhA" target="_blank" rel="noopener"> <svg width="17" height="17" viewbox="0 0 127.14 96.36" fill="white"><path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"></path></svg> Join the Server </a></div>
+<div class="terminal-window">
+  <div class="terminal-titlebar">
+    <span class="term-dot term-dot--red"></span>
+    <span class="term-dot term-dot--yellow"></span>
+    <span class="term-dot term-dot--green"></span>
+    <span class="terminal-title">mkwii-channel — zsh</span>
+  </div>
+  <div class="terminal-body">
+    <div class="terminal-line" id="termLine0"></div>
+    <div class="terminal-line" id="termLine1"></div>
+    <div class="terminal-line" id="termLine2"></div>
+    <div class="terminal-line" id="termLine3"></div>
+  </div>
+</div>
+<p class="section-label">// Live preview</p>
+<div class="preview-stage">
+  <img src="images/preview-desktop.png" 
+    alt="MKWii Channel Desktop" 
+    class="preview-desktop" />
+  <img src="images/preview-mobile.png" 
+    alt="MKWii Channel Mobile" 
+    class="preview-mobile" />
+  <img src="images/preview-desktop-mobile.png" 
+    alt="MKWii Channel Desktop" 
+    class="preview-desktop-crop" />
+  <img src="images/preview-mobile-mobile.png" 
+    alt="MKWii Channel Mobile" 
+    class="preview-mobile-crop" />
+</div>
+<p class="section-label">// What's inside</p>
+<div class="features">
+<div class="feature">
+<div class="feature-icon"><svg viewbox="0 0 24 24" fill="none" stroke="#8892f8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg></div>
+<h3>Custom Tracks</h3>
+<p>Hundreds of community-made tracks via CTGP-R, always race on something new.</p>
+</div>
+<div class="feature">
+<div class="feature-icon"><svg viewbox="0 0 24 24" fill="none" stroke="#8892f8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
+<h3>Tournaments</h3>
+<p>Regular organized events for all skill levels — from casual cups to competitive brackets.</p>
+</div>
+<div class="feature">
+<div class="feature-icon"><svg viewbox="0 0 24 24" fill="none" stroke="#8892f8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div>
+<h3>Community</h3>
+<p>Friendly players, helpful staff and an active Discord server that's always buzzing.</p>
+</div>
+<div class="feature">
+<div class="feature-icon"><svg viewbox="0 0 24 24" fill="none" stroke="#8892f8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></div>
+<h3>All Skill Levels</h3>
+<p>Whether you're a first-time racer or a seasoned competitive player, you're welcome here.</p>
+</div>
+</div>
+<div class="bottom-cta">
+<h2>Ready to race?</h2>
+<p>Join the MKWii Channel Discord server and meet the community today.</p>
+<div class="cta-buttons"><a class="cta-btn primary" href="https://discord.gg/dbgJQSeGhA" target="_blank" rel="noopener"> <svg width="16" height="16" viewbox="0 0 127.14 96.36" fill="white"><path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"></path></svg> Join Discord </a> <a class="cta-btn secondary" href="mkwtv.html">MKWii TV</a> <a class="cta-btn secondary" href="https://chadsoft.co.uk/">CTGP-R</a></div>
+</div>
+<footer class="footer">
+<div class="footer-left"><img src="ctgpr.png" alt="CTGP-R" /> <span>Powered by CTGP-R</span> <span class="footer-dot">•</span> <span>Nintendo © 2019–2022 MKWii Channel</span></div>
+</footer>
+<script src="effects.js"></script>
+</div>
+</body>
+</html>

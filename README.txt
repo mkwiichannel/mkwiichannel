@@ -1,7 +1,7 @@
 MKWii Channel — upgraded build
 ================================
 
-What changed vs. your original file:
+What changed vs.  original file:
 - Added a subtle canvas-based "warp field" (rushing streak lines, Rainbow-Road style) behind the whole page.
 - Added a soft cursor-following glow (desktop with a mouse only).
 - Added real-time 3D pointer tilt to the live-preview screenshots, the feature cards, and the CTA buttons.
